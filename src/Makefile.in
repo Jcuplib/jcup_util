@@ -1,0 +1,138 @@
+########################################################################
+#Time-stamp: <2015/08/24 15:14:47 JST by Takahiro INOUE Makefile.in>'
+########################################################################
+LIB	= libjcuputil.a
+
+OBJS	= \
+ mod_tdc_timedate_type.o \
+ mod_tdc_calen_type.o \
+ mod_tdc.o
+
+TESTS	= \
+ test_tdc_timedate_type \
+ test_tdc_calen_type \
+ test_tdc
+
+
+SRCS	= $(OBJ:.o=.F03)
+MODS	= mod_tdc.mod
+
+
+#### Standard PATH
+prefix      = @prefix@
+exec_prefix = @exec_prefix@
+bindir      = @bindir@
+srcdir      = @srcdir@
+libdir      = @libdir@
+incdir      = @includedir@
+###VPATH       = @srcdir@
+
+#### Compiler
+CC	= @CC@
+FC	= @FC@
+# MPIFC	= @MPIFC@
+# MPICC	= @MPICC@
+
+##### Other standard commands
+#INSTALL	= @INSTALL@
+INSTALL	= cp -u
+AR	= @AR@
+ARFLAGS	= @ARFLAGS@
+MKDIR_P	= @MKDIR_P@
+RANLIB	= @RANLIB@
+RM	= @RM@
+
+##### Compile/Link Options
+MODPATH	= 
+LIBPATH	= 
+
+FFLAGS   = @FCFLAGS@
+CFLAGS   = @CFLAGS@
+CPPFLAGS = @CPPFLAGS@ $(MODPATH) @DEFS@
+LDFLAGS  = @LDFLAGS@ $(LIBPATH)
+
+OUTPUT_OPTION = -o $@
+COMPILE.F      = $(FC) $(FFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+COMPILE_TEST.F = $(FC) $(FFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -DTEST -DDEBUG 
+COMPILE.c      = $(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+
+
+
+TRASH= *~ *.o *.mod fort.*
+
+
+
+########################################################################
+### TARGETS 
+########################################################################
+.PHONY: all install exe lib sublib tests
+all: lib
+
+lib: $(LIB)
+
+install: $(LIB) $(incdir) $(libdir)
+	$(INSTALL) $(LIB) $(libdir)
+	$(INSTALL) $(MODS) $(incdir)
+
+tests : $(TESTS)
+
+########################################################################
+#### dependency
+########################################################################
+.SUFFIX=
+.SUFFIX=.F90 .o .a .mod
+
+$(EXE) : $(OBJS) $(LIBS)
+	$(COMPILE.F) $< $(LDFLAGS) $(LIB) $(LIBS) $(OUTPUT_OPTION)
+
+$(LIB) : $(OBJS)
+	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $(LIB)
+
+# $(INC) : $(MAIN).o $(MAIN).F90
+# 	@true
+
+$(bindir) $(libdir) $(incdir) :
+	$(MKDIR_P) $@
+
+%.o: %.F
+	$(COMPILE.F) $(OUTPUT_OPTION) $<
+
+%.o: %.F03
+	$(COMPILE.F) $(OUTPUT_OPTION) $<
+
+%.o: %.c
+	$(COMPILE.c) $(OUTPUT_OPTION) $<
+
+%.mod : %.F90 %.o
+	@:
+
+test_%: mod_%.F03 $(LIB)
+	$(COMPILE_TEST.F) $< $(LDFLAGS) $(LIB) $(LIBS) $(OUTPUT_OPTION) 
+
+
+
+##### local dependency
+mod_tdc_timedate_type.o : mod_tdc_calen_type.o
+mod_tdc.o : mod_tdc_timedate_type.o mod_tdc_calen_type.o
+
+
+########################################################################
+### clean up section 
+########################################################################
+.PHONY: clean realclean distclean
+
+clean:
+	$(RM) $(TRASH)
+realclean : clean
+	$(RM) $(EXE) $(LIB) $(TESTS)
+distclean: realclean
+	$(RM) Makefile config.h config.log config.status stamp-h
+
+
+#=======================================================================
+# local variables:
+# mode: makefile
+# abbrev-mode: t
+# time-stamp-format: "%:y/%02m/%02d %02H:%02M:%02S %Z by %U %f"
+# end:

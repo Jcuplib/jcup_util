@@ -1,0 +1,17 @@
+TRASH = *~
+
+all: doc
+
+doc: 
+	doxygen Doxyfile
+
+pdf:
+	$(MAKE) -C latex
+
+clean:
+	$(RM) -rf $(TRASH) html latex doxygen_sqlite3.db
+
+realclean: clean
+
+distclean: clean
+	$(RM) Makefile

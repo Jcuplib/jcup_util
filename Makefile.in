@@ -1,0 +1,30 @@
+SUBDIRS = src doc
+
+TRASH	= *~
+
+all lib install tests:
+	$(MAKE) -C src $@
+
+clean:
+	for d in $(SUBDIRS); do $(MAKE) -C $$d $@; done
+	$(RM) $(TRASH)
+
+realclean:
+	for d in $(SUBDIRS); do $(MAKE) -C $$d $@; done
+	$(RM) $(TRASH)
+
+
+distclean:
+	for d in $(SUBDIRS); do $(MAKE) -C $$d $@; done
+	$(RM) $(TRASH)
+	$(RM) config.log config.status stamp-h Makefile
+	$(RM) include/* lib/*
+
+#### doxygen
+.PHONY: doc pdf
+doc: 
+	$(MAKE) -C doc
+pdf: doc
+	$(MAKE) -C doc pdf
+
+
